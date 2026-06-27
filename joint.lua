@@ -5,7 +5,6 @@ rednet.host("joint", cfg.hostname)
 
 local gear = peripheral.wrap(cfg.gearshift)
 
---------------------------------------------------------
 
 local function execute(delta)
 
@@ -33,7 +32,6 @@ local function execute(delta)
 
 end
 
---------------------------------------------------------
 
 while true do
 
