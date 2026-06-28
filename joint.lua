@@ -6,7 +6,7 @@ local gear = peripheral.wrap(cfg.gearshift)
 
 local function execute(delta)
     while gear.isRunning() do
-        sleep(0)
+        sleep(0.05)
     end
     gear.setInstructions({
         {
@@ -27,3 +27,6 @@ while true do
     execute(msg.delta)
 
 end
+
+
+
