@@ -12,7 +12,7 @@ local function execute(delta)
         {
             type = "turn_angle",
             value = math.abs(delta),
-            speed_modifier = delta >= 0 and 1 or -1
+            speed_modifier = 1
         },
         {
             type = "end"
