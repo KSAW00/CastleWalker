@@ -1,11 +1,12 @@
 return {
     relay = "redstone_relay_0",
-    length1 = 5,
-    length2 = 4.5,
+    length1 = 1,
+    length2 = 10,
+    length3 = 17,
 
     rest_pos = {
-        x = -4,
-        y = -1,
+        x = 0,
+        y = 0,
         z = 0,
     },
 
