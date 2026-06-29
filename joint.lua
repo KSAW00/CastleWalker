@@ -4,7 +4,9 @@ rednet.open(cfg.modem)
 rednet.host("joint", cfg.hostname)
 
 local gear = peripheral.wrap(cfg.gearshift)
+local bearing = peripheral.wrap(cfg.bearing)
 
+currentAngle=bearing.getTargetAngle()
 
 local function round(x)
     if x >= 0 then
