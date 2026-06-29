@@ -4,7 +4,7 @@ rednet.open(cfg.modem)
 rednet.host("joint", cfg.hostname)
 
 local gear = peripheral.wrap(cfg.gearshift)
-local currentAngle = cfg.home
+
 
 local function round(x)
     if x >= 0 then
@@ -43,6 +43,7 @@ local function execute(targetAngle)
     currentAngle = targetAngle
 end
 
+execute(cfg.home)
 while true do
     local _, msg = rednet.receive("joint.command")
     execute(msg.angle)
