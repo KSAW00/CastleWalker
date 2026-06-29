@@ -1,4 +1,5 @@
 return {
+    modem = "top",
     relay = "redstone_relay_0",
     length1 = 1,
     length2 = 10,

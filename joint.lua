@@ -15,11 +15,14 @@ local function round(x)
 end
 
 local function execute(targetAngle)
+    if targetAngle==nil then
+        targetAngle=0
+    end
     targetAngle = round(targetAngle)
     if targetAngle == currentAngle then
         return
     end
-    local delta = targetAngle - currentAngle
+    local delta = (targetAngle - currentAngle)%360
     while gear.isRunning() do
         sleep(0.05)
     end
