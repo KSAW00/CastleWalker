@@ -1,3 +1,13 @@
+local cfg = require("config")
+
+rednet.open(cfg.modem)
+
+local relay = peripheral.wrap(cfg.relay)
+
+local hip1ID = assert(rednet.lookup("joint", cfg.joints.hip1))
+local hip2ID = assert(rednet.lookup("joint", cfg.joints.hip2))
+local kneeID = assert(rednet.lookup("joint", cfg.joints.knee))
+
 while true do
     local left  = relay.getAnalogInput("left")
     local right = relay.getAnalogInput("right")
