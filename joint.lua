@@ -46,7 +46,7 @@ local function execute(targetAngle)
         type = "end"
     }
 })
-
+    gear.start()
     currentAngle = targetAngle
 end
 
