@@ -20,41 +20,39 @@ while true do
     ------------------------------------------------------------------
 
     local pos = {
-        x = cfg.rest_pos.x,
-        y = cfg.rest_pos.y,
-        z = cfg.rest_pos.z,
+        x = cfg.rest_pos.x, -- Home: 17
+        y = cfg.rest_pos.y, -- Home: 18
+        z = cfg.rest_pos.z, -- Home: 7
     }
 
-    -- Axis Rules: +X = Forward, +Y = Downward, +Z = Leftward
+    -- Axis Map: +X = Forward, +Y = Downward, +Z = Leftward
     if pressed then
         -- Front moves foot UP (-Y), Back moves foot DOWN (+Y)
         pos.y = pos.y + (back - front) * cfg.joystick_travel / 15
     else
-        -- FIX 1: Corrected Forward/Back joystick alignment
+        -- Front moves FORWARD (+X), Back moves BACKWARD (-X)
         pos.x = pos.x + (front - back) * cfg.joystick_travel / 15
-        
-        -- FIX 2: Inverted Right/Left mapping so right goes right, left goes left
-        -- Moving Right subtracts from Z (moves right), Left adds to Z (moves left)
+        -- Right moves RIGHT (-Z), Left moves LEFT (+Z)
         pos.z = pos.z + (left - right) * cfg.joystick_travel / 15
     end
 
     ------------------------------------------------------------------
-    -- Inverse Kinematics (Anthropomorphic Configuration)
+    -- Inverse Kinematics (Hip 1 rotates in XY plane)
     ------------------------------------------------------------------
 
-    -- Yaw rotation in the horizontal plane (Z and X)
-    local t1 = math.atan2(pos.z, pos.x)
+    -- 1. Solve Hip 1 (t1): Measured from Y sweeping toward X
+    local t1 = math.atan2(pos.x, pos.y)
 
-    -- Find total radial length of the arm's projection in the ground plane
-    local r_xz = math.sqrt(pos.x * pos.x + pos.z * pos.z)
+    -- 2. Find total radial length of the arm's projection in the XY plane
+    local r_xy = math.sqrt(pos.x * pos.x + pos.y * pos.y)
 
-    -- Translate the origin from Hip 1 to Hip 2 along the baseline l1
-    local px = r_xz - cfg.length1
+    -- 3. Translate the origin from Hip 1 to Hip 2 along baseline l1
+    local px = r_xy - cfg.length1
     
-    -- Vertical tracking mapped cleanly to Y
-    local pz = -pos.y 
+    -- 4. Hip 2 and Knee handle cross-plane deflection along the Z axis
+    local pz = pos.z 
 
-    -- Total squared distance from Hip 2 axis center to target foot
+    -- 5. Total squared distance from Hip 2 axis center to target foot
     local d2 = px * px + pz * pz
 
     -- Reachability clamp to protect physical motors
@@ -79,7 +77,7 @@ while true do
     local c3 = (d2 - cfg.length2^2 - cfg.length3^2) / (2 * cfg.length2 * cfg.length3)
     c3 = math.max(-1, math.min(1, c3))
 
-    -- Choose stable bend direction
+    -- Choose stable human-like bend direction
     local s3 = -math.sqrt(1 - c3 * c3)
     local t3 = math.atan2(s3, c3)
 
@@ -101,11 +99,11 @@ while true do
     local knee = math.deg(t3)
 
     ------------------------------------------------------------------
-    -- Send commands (Using your verified inversion calibrations)
+    -- Send commands (With your verified inversion adjustments)
     ------------------------------------------------------------------
 
     rednet.send(hip1ID, { angle = -yaw }, "joint.command")
-    rednet.send(hip2ID, { angle = hip }, "joint.command")
+    rednet.send(hip2ID, { angle = 90 + hip }, "joint.command")
     rednet.send(kneeID, { angle = -knee }, "joint.command")
 
     sleep(0.05)
