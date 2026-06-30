@@ -38,19 +38,20 @@ while true do
     end
 
     ------------------------------------------------------------------
-    -- Inverse Kinematics
+    -- Inverse Kinematics (Swapped X and Z)
     ------------------------------------------------------------------
 
-    -- Hip yaw: Angle on horizontal plane (+Z Left, +X Forward)
-    local t1 = math.atan2(pos.z, pos.x)
+    -- FIX: Hip yaw now calculates using X as the perpendicular/side axis 
+    -- and Z as the forward baseline axis.
+    local t1 = math.atan2(pos.x, pos.z)
 
-    -- Distance from the hip center to the foot projection on the ground
-    local r = math.sqrt(pos.x * pos.x + pos.z * pos.z)
+    -- Distance formula remains structurally identical for horizontal plane
+    local r = math.sqrt(pos.z * pos.z + pos.x * pos.x)
 
     -- Translate origin from Hip1 to Hip2
     local px = r - cfg.length1
     
-    -- FIX: Trigonometry expects +Up, but your system uses +Down. 
+    -- Trigonometry expects +Up, but your system uses +Down. 
     -- Inverting pos.y here keeps the structural IK pitch formulas math-accurate.
     local pz = -pos.y 
 
@@ -110,8 +111,8 @@ while true do
     -- Send commands
     ------------------------------------------------------------------
 
-    rednet.send(hip1ID, { angle = yaw }, "joint.command")
-    rednet.send(hip2ID, { angle = hip }, "joint.command")
+    rednet.send(hip1ID, { angle = -90+yaw }, "joint.command")
+    rednet.send(hip2ID, { angle = 90+hip }, "joint.command")
     rednet.send(kneeID, { angle = -knee }, "joint.command")
 
     sleep(0.05)
