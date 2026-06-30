@@ -1,13 +1,3 @@
-local cfg = require("config")
-
-rednet.open(cfg.modem)
-
-local relay = peripheral.wrap(cfg.relay)
-
-local hip1ID = assert(rednet.lookup("joint", cfg.joints.hip1))
-local hip2ID = assert(rednet.lookup("joint", cfg.joints.hip2))
-local kneeID = assert(rednet.lookup("joint", cfg.joints.knee))
-
 while true do
     local left  = relay.getAnalogInput("left")
     local right = relay.getAnalogInput("right")
@@ -25,7 +15,6 @@ while true do
         z = cfg.rest_pos.z,
     }
 
-    -- Applying inputs matching your signs:
     -- +X = Forward, +Y = Downward, +Z = Leftward
     if pressed then
         -- Front moves foot UP (-Y), Back moves foot DOWN (+Y)
@@ -38,24 +27,20 @@ while true do
     end
 
     ------------------------------------------------------------------
-    -- Inverse Kinematics (Swapped X and Z)
+    -- Inverse Kinematics (Derived from your FK equations)
     ------------------------------------------------------------------
 
-    -- FIX: Hip yaw now calculates using X as the perpendicular/side axis 
-    -- and Z as the forward baseline axis.
+    -- 1. Solve Yaw (t1) based on your formula: x = sin(t1), y = cos(t1)
     local t1 = math.atan2(pos.x, pos.z)
 
-    -- Distance formula remains structurally identical for horizontal plane
-    local r = math.sqrt(pos.z * pos.z + pos.x * pos.x)
+    -- 2. Solve total ground radius
+    local r = math.sqrt(pos.x * pos.x + pos.z * pos.z)
 
-    -- Translate origin from Hip1 to Hip2
+    -- 3. Translate origin to Hip2 (L1 subtraction proven by math)
     local px = r - cfg.length1
-    
-    -- Trigonometry expects +Up, but your system uses +Down. 
-    -- Inverting pos.y here keeps the structural IK pitch formulas math-accurate.
-    local pz = -pos.y 
+    local pz = -pos.y -- Invert because your +Y is downward, but formula +Z is upward
 
-    -- Distance from Hip2 to target
+    -- 4. Distance from Hip2 to target
     local d2 = px * px + pz * pz
 
     -- Reachability clamp
@@ -74,30 +59,24 @@ while true do
     end
 
     ------------------------------------------------------------------
-    -- Knee
+    -- Knee (t3)
     ------------------------------------------------------------------
 
-    local c3 =
-        (d2 - cfg.length2^2 - cfg.length3^2) /
-        (2 * cfg.length2 * cfg.length3)
-
+    local c3 = (d2 - cfg.length2^2 - cfg.length3^2) / (2 * cfg.length2 * cfg.length3)
     c3 = math.max(-1, math.min(1, c3))
 
-    -- Choose bend direction
+    -- Choose bend direction (negative for typical humanlike knee bend)
     local s3 = -math.sqrt(1 - c3 * c3)
-
     local t3 = math.atan2(s3, c3)
 
     ------------------------------------------------------------------
-    -- Hip pitch
+    -- Hip pitch (t2)
     ------------------------------------------------------------------
 
     local k1 = cfg.length2 + cfg.length3 * c3
     local k2 = cfg.length3 * s3
 
-    local t2 =
-        math.atan2(pz, px) -
-        math.atan2(k2, k1)
+    local t2 = math.atan2(pz, px) - math.atan2(k2, k1)
 
     ------------------------------------------------------------------
     -- Convert to degrees
