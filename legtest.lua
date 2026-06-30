@@ -1,13 +1,3 @@
-local cfg = require("config")
-
-rednet.open(cfg.modem)
-
-local relay = peripheral.wrap(cfg.relay)
-
-local hip1ID = assert(rednet.lookup("joint", cfg.joints.hip1))
-local hip2ID = assert(rednet.lookup("joint", cfg.joints.hip2))
-local kneeID = assert(rednet.lookup("joint", cfg.joints.knee))
-
 while true do
     local left  = relay.getAnalogInput("left")
     local right = relay.getAnalogInput("right")
@@ -25,29 +15,34 @@ while true do
         z = cfg.rest_pos.z,
     }
 
-    -- Apply inputs based on your axes:
-    -- X = Front/Back, Y = Up/Down, Z = Left/Right
+    -- Applying inputs matching your signs:
+    -- +X = Forward, +Y = Downward, +Z = Leftward
     if pressed then
-        pos.y = pos.y + (front - back) * cfg.joystick_travel / 15
+        -- Front moves foot UP (-Y), Back moves foot DOWN (+Y)
+        pos.y = pos.y + (back - front) * cfg.joystick_travel / 15
     else
+        -- Front moves FORWARD (+X), Back moves BACKWARD (-X)
         pos.x = pos.x + (front - back) * cfg.joystick_travel / 15
-        pos.z = pos.z + (right - left) * cfg.joystick_travel / 15
+        -- Right moves RIGHT (-Z), Left moves LEFT (+Z)
+        pos.z = pos.z + (left - right) * cfg.joystick_travel / 15
     end
 
     ------------------------------------------------------------------
     -- Inverse Kinematics
     ------------------------------------------------------------------
 
-    -- Hip yaw: Angle on the horizontal ground plane (Z and X)
+    -- Hip yaw: Angle on horizontal plane (+Z Left, +X Forward)
     local t1 = math.atan2(pos.z, pos.x)
 
     -- Distance from the hip center to the foot projection on the ground
     local r = math.sqrt(pos.x * pos.x + pos.z * pos.z)
 
     -- Translate origin from Hip1 to Hip2
-    -- px is horizontal distance from Hip2, pz is vertical distance (Y)
     local px = r - cfg.length1
-    local pz = pos.y
+    
+    -- FIX: Trigonometry expects +Up, but your system uses +Down. 
+    -- Inverting pos.y here keeps the structural IK pitch formulas math-accurate.
+    local pz = -pos.y 
 
     -- Distance from Hip2 to target
     local d2 = px * px + pz * pz
