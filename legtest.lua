@@ -8,22 +8,24 @@ local hip1ID = assert(rednet.lookup("joint", cfg.joints.hip1))
 local hip2ID = assert(rednet.lookup("joint", cfg.joints.hip2))
 local kneeID = assert(rednet.lookup("joint", cfg.joints.knee))
 
+------------------------------------------------------------------
+-- Desired foot position
+------------------------------------------------------------------
+
+local pos = {
+    x = cfg.rest_pos.x,     -- Home: 17
+    y = cfg.rest_pos.y,     -- Home: 18
+    z = cfg.rest_pos.z,     -- Home: 7
+}
+
 while true do
-    local left  = relay.getAnalogInput("left")
-    local right = relay.getAnalogInput("right")
-    local front = relay.getAnalogInput("front")
-    local back  = relay.getAnalogInput("back")
+    local left    = relay.getAnalogInput("left")
+    local right   = relay.getAnalogInput("right")
+    local front   = relay.getAnalogInput("front")
+    local back    = relay.getAnalogInput("back")
     local pressed = relay.getInput("top")
 
-    ------------------------------------------------------------------
-    -- Desired foot position
-    ------------------------------------------------------------------
 
-    local pos = {
-        x = cfg.rest_pos.x, -- Home: 17
-        y = cfg.rest_pos.y, -- Home: 18
-        z = cfg.rest_pos.z, -- Home: 7
-    }
 
     -- Axis Map: +X = Forward, +Y = Downward, +Z = Leftward
     if pressed then
@@ -48,9 +50,9 @@ while true do
 
     -- 3. Translate the origin from Hip 1 to Hip 2 along baseline l1
     local px = r_xy - cfg.length1
-    
+
     -- 4. Hip 2 and Knee handle cross-plane deflection along the Z axis
-    local pz = pos.z 
+    local pz = pos.z
 
     -- 5. Total squared distance from Hip 2 axis center to target foot
     local d2 = px * px + pz * pz
@@ -74,7 +76,7 @@ while true do
     -- Knee / Elbow (t3)
     ------------------------------------------------------------------
 
-    local c3 = (d2 - cfg.length2^2 - cfg.length3^2) / (2 * cfg.length2 * cfg.length3)
+    local c3 = (d2 - cfg.length2 ^ 2 - cfg.length3 ^ 2) / (2 * cfg.length2 * cfg.length3)
     c3 = math.max(-1, math.min(1, c3))
 
     -- Choose stable human-like bend direction
@@ -96,15 +98,15 @@ while true do
 
     local yaw = math.deg(t1)
     local hip = math.deg(t2)
-    local knee = math.deg(t3)
+    local knee = math.deg(t3-t2)
 
     ------------------------------------------------------------------
     -- Send commands (With your verified inversion adjustments)
     ------------------------------------------------------------------
 
     rednet.send(hip1ID, { angle = -yaw }, "joint.command")
-    rednet.send(hip2ID, { angle = 90 + hip }, "joint.command")
-    rednet.send(kneeID, { angle = -knee }, "joint.command")
+    rednet.send(hip2ID, { angle = hip }, "joint.command")
+    rednet.send(kneeID, { angle = knee }, "joint.command")
 
     sleep(0.05)
 end
