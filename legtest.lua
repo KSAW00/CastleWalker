@@ -96,7 +96,7 @@ while true do
 
     local yaw = math.deg(t1)
     local hip = math.deg(t2)
-    local knee = math.deg(t3)
+    local knee = math.deg(t3-t2)
 
     ------------------------------------------------------------------
     -- Send commands (With your verified inversion adjustments)
