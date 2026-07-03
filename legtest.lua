@@ -9,9 +9,9 @@ local hip2ID = assert(rednet.lookup("joint", cfg.joints.hip2))
 local kneeID = assert(rednet.lookup("joint", cfg.joints.knee))
 
 -- Direct local speed controller connections
-local speed0 = peripheral.wrap("speedController_0")
-local speed1 = peripheral.wrap("speedController_1")
-local speed2 = peripheral.wrap("speedController_2")
+local speed0 = peripheral.wrap("Create_RotationSpeedController_0")
+local speed1 = peripheral.wrap("Create_RotationSpeedController_1")
+local speed2 = peripheral.wrap("Create_RotationSpeedController_2")
 
 local last_angles = { yaw = 0, hip = 0, knee = 0 }
 
@@ -104,8 +104,7 @@ while true do
     ------------------------------------------------------------------
     -- Convert to degrees
     ------------------------------------------------------------------
-
-    local yaw = -math.deg(t1)
+   local yaw = -math.deg(t1)
     local hip = math.deg(t2)
     local knee = -math.deg(t3)
 
@@ -117,23 +116,16 @@ while true do
     local diff_hip  = getShortestDiff(hip, last_angles.hip)
     local diff_knee = getShortestDiff(knee, last_angles.knee)
 
-    -- 2. Convert degrees/tick to standard RPM (Revolutions Per Minute)
-    local rpm_yaw  = math.max(0, diff_yaw * 3.333)
-    local rpm_hip  = math.max(0, diff_hip * 3.333)
-    local rpm_knee = math.max(0, diff_knee * 3.333)
+    local Kp = 3.5
+    local rpm_yaw  = math.max(2, math.abs(diff_yaw)  * Kp)
+    local rpm_hip  = math.max(2, math.abs(diff_hip)  * Kp)
+    local rpm_knee = math.max(2, math.abs(diff_knee) * Kp)
 
-    -- 3. Push velocity changes to the local physical speed controller blocks
     speed0.setTargetSpeed(rpm_yaw)
-    speed1.setTargetSpeed(rpm_hip)
+    speed1.setTargetSpeed(-rpm_hip)
     speed2.setTargetSpeed(rpm_knee)
-
-    -- 4. Store current target states for historical tracking in the next iteration
-    last_angles.yaw  = yaw
-    last_angles.hip  = hip
-    last_angles.knee = knee
-
     ------------------------------------------------------------------
-    -- Send commands (With your verified inversion adjustments)
+    -- Send commands 
     ------------------------------------------------------------------
 
     rednet.send(hip1ID, { angle = yaw }, "joint.command")
