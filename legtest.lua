@@ -142,6 +142,12 @@ while true do
     speed1.setTargetSpeed(-rpm_hip)
     speed2.setTargetSpeed(rpm_knee)
 
+    last_angles.yaw  = last_angles.yaw  + (diff_yaw )
+    last_angles.knee = last_angles.knee + (diff_knee)
+    
+    -- FIXED: Subtract the error delta to match the reversed physical motor tracking
+    last_angles.hip  = last_angles.hip  - (diff_hip)
+
     rednet.send(hip1ID, { angle = yaw }, "joint.command")
     rednet.send(hip2ID, { angle = hip }, "joint.command")
     rednet.send(kneeID, { angle = knee }, "joint.command")
