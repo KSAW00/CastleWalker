@@ -126,13 +126,13 @@ while true do
     if max_error > 0.1 then
         -- Kp controls the master speed of the bottleneck joint.
         -- Turn up to make the whole leg faster, down to make it slower.
-        local Kp           = 4.0
+        local Kp           = 2
         local master_speed = max_error * Kp
 
         -- Proportional Scaling: Every joint's speed is perfectly matched to the master joint
-        rpm_yaw            = math.max(2, (abs_yaw / max_error) * master_speed)
-        rpm_hip            = math.max(2, (abs_hip / max_error) * master_speed)
-        rpm_knee           = math.max(2, (abs_knee / max_error) * master_speed)
+        rpm_yaw            = math.min(math.max(2, (abs_yaw / max_error) * master_speed),24)
+        rpm_hip            = math.min(math.max(2, (abs_hip / max_error) * master_speed),24)
+        rpm_knee           = math.min(math.max(2, (abs_knee / max_error) * master_speed),24)
     end
     ------------------------------------------------------------------
     -- Send commands

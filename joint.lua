@@ -1,7 +1,7 @@
 local cfg = require("config")
 
 rednet.open(cfg.modem)
-rednet.host("joint", cfg.hostname)
+rednet.host(cfg.prefix.."joint", cfg.prefix..cfg.hostname)
 
 local gear = peripheral.wrap(cfg.gearshift)
 local bearing = peripheral.wrap(cfg.bearing)
@@ -59,9 +59,6 @@ local function execute(targetAngle)
         sleep(0.05)
     end
 end
-
--- Initialize at home position
-execute(cfg.home)
 
 -- Main Listener Loop
 while true do
