@@ -5,13 +5,13 @@ rednet.open(cfg.modem)
 rednet.host("leg_controllers", cfg.prefix .. "brain")
 
 -- Direct local speed controller connections
-local speedhip1 = peripheral.wrap("speedController_0")
-local speedhip2 = peripheral.wrap("speedController_1")
-local speedknee = peripheral.wrap("speedController_2")
+local speedhip1 = peripheral.wrap("Create_RotationSpeedController_11")
+local speedhip2 = peripheral.wrap("Create_RotationSpeedController_12")
+local speedknee = peripheral.wrap("Create_RotationSpeedController_13")
 
-local hip1ID = assert(rednet.lookup("joint", cfg.prefix .. cfg.joints.hip1))
-local hip2ID = assert(rednet.lookup("joint", cfg.prefix .. cfg.joints.hip2))
-local kneeID = assert(rednet.lookup("joint", cfg.prefix .. cfg.joints.knee))
+local hip1ID = assert(rednet.lookup(cfg.prefix .. "joint", cfg.prefix .. cfg.joints.hip1))
+local hip2ID = assert(rednet.lookup(cfg.prefix .. "joint", cfg.prefix .. cfg.joints.hip2))
+local kneeID = assert(rednet.lookup(cfg.prefix .. "joint", cfg.prefix .. cfg.joints.knee))
 
 ------------------------------------------------------------------
 -- ARCHITECTURE TRAJECTORY STATE TRACKING
@@ -152,15 +152,18 @@ while true do
             rpm_hip  = math.min(math.max(2, (diff_hip / max_diff) * master_speed), 24)
             rpm_knee = math.min(math.max(2, (diff_knee / max_diff) * master_speed), 24)
         end
+    else
+        -- FIX 1: If we have fully arrived at the target, force absolute 0 RPM holding brakes
+        rpm_yaw, rpm_hip, rpm_knee = 0, 0, 0
     end
 
     ------------------------------------------------------------------
     -- TRANSMIT CONTROL VECTORS & HARDWARE COMMANDS
     ------------------------------------------------------------------
     -- Commit synchronized speeds to the Create controllers
-    speed0.setTargetSpeed(rpm_yaw)
-    speed1.setTargetSpeed(-rpm_hip) -- Keeps your physical reversed hip axis fix
-    speed2.setTargetSpeed(rpm_knee)
+    speedhip1.setTargetSpeed(rpm_yaw)
+    speedhip2.setTargetSpeed(-rpm_hip) -- Keeps your physical reversed hip axis fix
+    speedknee.setTargetSpeed(rpm_knee)
 
     -- Update tracking states
     last_angles.yaw  = yaw
